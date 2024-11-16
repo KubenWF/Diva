@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Index{% endblock %}
+
+{% block content %}
+    <h1>Users</h1>
+    <ul>
+        {% for user in users %}
+        <li>{{ user }} 
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h3>New User</h3>
+    <form action = "{{url_for('index')}}" method = "POST">
+        <input type="text" id= 'first_name' name = "first_name" placeholder="First Name" required="required"><br>
+        <input type="text" id= 'last_name'name = "last_name" placeholder="Last Name" required="required"><br>
+        <input type="text" id = "email" name = "email" placeholder="Email" required="required"><br>
+        <input type="text" id = "bio" name = "bio" placeholder="Bio"><br>
+        <input type="number" id="birth_day" name="birth_day" min="1" max="31" placeholder="DD"><br>
+        <input type="number" id="birth_month" name="birth_month" min="1" max="12" placeholder="MM"><br>
+        <input type="number" id="birth_year" name="birth_year" min="1900" max="2100" placeholder="YYYY"><br>
+        <input type="submit" value='Create'>
+    </form>
+
+{% endblock %}

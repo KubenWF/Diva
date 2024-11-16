@@ -1,8 +1,8 @@
-"""Initial migration after database URL change
+"""Initial migration
 
-Revision ID: eb735b849da5
+Revision ID: 59dd40fe660d
 Revises: 
-Create Date: 2024-11-14 17:35:27.782250
+Create Date: 2024-11-16 08:18:32.449245
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'eb735b849da5'
+revision = '59dd40fe660d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -33,7 +33,9 @@ def upgrade():
     sa.Column('first_name', sa.String(length=80), nullable=False),
     sa.Column('last_name', sa.String(length=80), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
-    sa.Column('birth_date', sa.Date(), nullable=False),
+    sa.Column('birth_day', sa.Integer(), nullable=False),
+    sa.Column('birth_month', sa.Integer(), nullable=False),
+    sa.Column('birth_year', sa.Integer(), nullable=False),
     sa.Column('bio', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
