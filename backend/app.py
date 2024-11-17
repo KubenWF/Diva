@@ -1,6 +1,9 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate 
+from flask_login import LoginManager
+from flask_bcrypt import Bcrypt
+
 
 db = SQLAlchemy()
 
@@ -12,7 +15,8 @@ def create_app():
     
     db.init_app(app)
 
-    from routes.user_route import register_users
+    from routes import register_albums,register_users
+    register_albums(app,db)
     register_users(app,db)
 
     migrate = Migrate(app,db)

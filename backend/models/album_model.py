@@ -1,12 +1,16 @@
 from app import db
 from .association_tables import user_albums
 
+
 class Album(db.Model):
-    __tablename__ = 'album'
+    __tablename__ = 'albums'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False,index=True)
     release_date = db.Column(db.Date, nullable=True)  # Optional field for release date
     cover_art = db.Column(db.String(255), nullable=False)
+    ranking = db.Column(db.Integer, nullable=True)
+    descriptors = db.Column(db.Text, nullable=True)
+    
 
     albums_users = db.relationship('User', secondary=user_albums, backref=db.backref('saved_users', lazy='dynamic'))
 
@@ -19,7 +23,9 @@ class Album(db.Model):
             "name": self.name,
             "release_date": self.release_date.isoformat() if self.release_date else None,
             "cover_art":self.cover_art,
-            "albums_users": [user.to_json() for user in self.albums_users]
+            "albums_users": [user.to_json() for user in self.albums_users],
+            "ranking": self.ranking if self.ranking else 0,  
+            "descriptors": json.loads(self.descriptors) if self.descriptors else []  
         }
     
     def __repr__(self):
