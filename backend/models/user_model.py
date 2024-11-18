@@ -1,6 +1,6 @@
 from app import db
 from flask_login import UserMixin
-from .association_tables import user_albums
+from .association_tables import user_albums,owner_users_lists
 from datetime import datetime
 
 class User(db.Model,UserMixin):
@@ -15,10 +15,10 @@ class User(db.Model,UserMixin):
     bio = db.Column(db.Text, nullable=True)         # Bio of user
     
     # favorite_artists = db.relationship('Artist', secondary=favorite_artists, backref=db.backref('artists_users', lazy='dynamic'))
-    
+                
     user_albums = db.relationship('Album', secondary=user_albums, backref=db.backref('saved_albums', lazy='dynamic'))
 
-    # owned_lists = db.relationship('List', backref='owner', lazy=True)
+    owned_lists = db.relationship('List',secondary=owner_users_lists,backref=db.backref('ownerslists', lazy='dynamic'))
 
     # followed_lists = db.relationship('List', secondary=list_followers, backref=db.backref('lists_followed', lazy='dynamic'))
 
@@ -34,7 +34,7 @@ class User(db.Model,UserMixin):
             "birth_month": self.birth_month,
             "birth_year": self.birth_year,
             "bio": self.bio,
-            "user_albums": [album.to_json() for album in self.user_albums]
+            "user_albums": [{"album_id": album.id} for album in self.user_albums]
         }
 
     def __repr__(self):

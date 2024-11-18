@@ -9,7 +9,6 @@ def register_users(app,db):
         json_users = list(map(lambda x: x.to_json(),users))
         return jsonify({"users":json_users}),200
         
-    
     @app.route("/create_user",methods=["POST"]) ## WORKS!!!!
     def create_user():
         first_name = request.json.get('first_name')
@@ -100,7 +99,7 @@ def register_users(app,db):
         else:
             return jsonify({'message': 'Album is already in your favorites.'}), 200
 
-    @app.route("/albums_added/<int:user_id>", methods=["GET"])
+    @app.route("/albums_added/<int:user_id>", methods=["GET"]) ## WORKS!!!!
     def get_added_albums(user_id):
 
         user = User.query.get(user_id)
@@ -111,6 +110,6 @@ def register_users(app,db):
         if not albums:
             return jsonify({"message": "No albums added by this user."}), 404
 
-        json_albums = [album.to_json() for album in albums]
+        json_albums = [{"album_id": album.id,"album_name": album.name,"album_cover_art": album.cover_art,"album_ranking": album.ranking} for album in albums]
 
         return jsonify({"albums": json_albums}), 200

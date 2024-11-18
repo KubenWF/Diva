@@ -1,6 +1,6 @@
 from app import db
-from .association_tables import user_albums
-
+from .association_tables import user_albums,list_albums
+import json
 
 class Album(db.Model):
     __tablename__ = 'albums'
@@ -23,7 +23,7 @@ class Album(db.Model):
             "name": self.name,
             "release_date": self.release_date.isoformat() if self.release_date else None,
             "cover_art":self.cover_art,
-            "albums_users": [user.to_json() for user in self.albums_users],
+            "albums_users": [{"album_id": user.id} for user in self.albums_users],
             "ranking": self.ranking if self.ranking else 0,  
             "descriptors": json.loads(self.descriptors) if self.descriptors else []  
         }

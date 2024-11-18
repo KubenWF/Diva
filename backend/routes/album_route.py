@@ -52,3 +52,18 @@ def register_albums(app,db):
         db.session.commit()
 
         return jsonify({"message": "album updated"}), 201
+
+    @app.route("/users_added/<int:album_id>", methods=["GET"]) ## WORKS!!!!
+    def get_added_users(album_id):
+
+        album = Album.query.get(album_id)
+        if not album:
+            return jsonify({"message": "Album not found"}), 404
+
+        users = album.albums_users
+        if not users:
+            return jsonify({"message": "No users added by this user."}), 404
+
+        json_users = [{"album_id": album.id} for album in users]
+
+        return jsonify({"users": json_users}), 200

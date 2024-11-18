@@ -15,9 +15,10 @@ def create_app():
     
     db.init_app(app)
 
-    from routes import register_albums,register_users
+    from routes import register_albums,register_users,register_lists
     register_albums(app,db)
     register_users(app,db)
+    register_lists(app,db)
 
     migrate = Migrate(app,db)
 
