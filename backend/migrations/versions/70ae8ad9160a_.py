@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: bcdd91a854d5
+Revision ID: 70ae8ad9160a
 Revises: 
-Create Date: 2024-11-18 19:48:34.202607
+Create Date: 2024-11-19 16:18:43.586603
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'bcdd91a854d5'
+revision = '70ae8ad9160a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -42,15 +42,16 @@ def upgrade():
 
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('first_name', sa.String(length=80), nullable=False),
-    sa.Column('last_name', sa.String(length=80), nullable=False),
+    sa.Column('user_name', sa.String(length=80), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
     sa.Column('birth_day', sa.Integer(), nullable=False),
+    sa.Column('password', sa.String(length=80), nullable=False),
     sa.Column('birth_month', sa.Integer(), nullable=False),
     sa.Column('birth_year', sa.Integer(), nullable=False),
     sa.Column('bio', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('user_name')
     )
     op.create_table('favorite_albums',
     sa.Column('user_id', sa.Integer(), nullable=False),

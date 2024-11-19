@@ -1,0 +1,6 @@
+Rebooting the database
+
+rm -r migrations                # Remove old migrations folder
+flask db init                   # Reinitialize migrations folder
+flask db migrate -m "message"   # Generate initial migration
+flask db upgrade                # Apply migration to recreate database

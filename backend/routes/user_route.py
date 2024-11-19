@@ -1,7 +1,8 @@
-from flask import render_template,request,jsonify
+from flask import render_template,request,jsonify,redirect,url_for
 from models import User
+from flask_login import login_user,logout_user,current_user,login_required
 
-def register_users(app,db):
+def register_users(app,db,bcrypt):
 
     @app.route("/users",methods=["GET"]) ## WORKS!!!!
     def get_users():
@@ -11,8 +12,8 @@ def register_users(app,db):
         
     @app.route("/create_user",methods=["POST"]) ## WORKS!!!!
     def create_user():
-        first_name = request.json.get('first_name')
-        last_name = request.json.get('last_name')
+        password = request.json.get('first_name')
+        user_name = request.json.get('user_name')
         email = request.json.get('email')
         birth_day = int(request.json.get('birth_day'))
         bio = request.json.get('bio')
@@ -22,7 +23,7 @@ def register_users(app,db):
         if not first_name or not last_name or not email or not birth_day or not birth_year or not birth_month:
             return jsonify({'message':'You missed one of the data points'}),400
                 
-        new_user = User(first_name=first_name,last_name=last_name,email=email,birth_day=birth_day,birth_month=birth_month,birth_year=birth_year,bio=bio)
+        new_user = User(user_name=user_name,password=passworde,email=email,birth_day=birth_day,birth_month=birth_month,birth_year=birth_year,bio=bio)
 
         json_user = new_user.to_json()
         try:
@@ -66,8 +67,8 @@ def register_users(app,db):
             return jsonify({"message":"User not found"}),404
         
         data = request.json
-        user.first_name = data.get("first_name",user.first_name)
-        user.last_name = data.get("last_name",user.last_name)
+        user.user_name = data.get("user_name",user.user_name)
+        user.password = data.get("password",user.password)
         user.email = data.get("email",user.email)
         user.bio = data.get("bio",user.bio)
         user.birth_day = data.get("birth_day",user.birth_day)
@@ -113,3 +114,57 @@ def register_users(app,db):
         json_albums = [{"album_id": album.id,"album_name": album.name,"album_cover_art": album.cover_art,"album_ranking": album.ranking} for album in albums]
 
         return jsonify({"albums": json_albums}), 200
+
+    @app.route("/index",methods=["GET","POST"])
+    def index():
+        if current_user.is_authenticated:
+            return jsonify({"User ID":str(current_user.id),'message': 'User logged in!'}), 200
+        else:
+            return "No user is logged in"    
+
+    @app.route("/signup",methods=["GET","POST"])
+    def signup():
+        if request.method == "GET":
+            return jsonify({'message': 'Sign up success!'}), 200
+        elif request.method == "POST":
+            user_name = request.json.get('user_name')
+            password = str(request.json.get('password'))
+            email = request.json.get('email')
+            birth_day = int(request.json.get('birth_day'))
+            birth_month = int(request.json.get('birth_month'))
+            birth_year = int(request.json.get('birth_year'))
+            bio = request.json.get('bio')
+
+            hashed_password = bcrypt.generate_password_hash(password)
+
+            hashed_password = hashed_password.decode("utf-8")
+
+            user = User(user_name = user_name,password = hashed_password,email=email,birth_day = birth_day,birth_month = birth_month,birth_year=birth_year,bio=bio)
+
+            db.session.add(user)
+            db.session.commit()
+
+            return redirect(url_for('index'))
+
+
+    @app.route("/login",methods=["GET","POST"])
+    def login():
+        if request.method == "GET":
+            return jsonify({'message': 'Login success!'}), 200
+        elif request.method == "POST":
+            user_name = request.json.get('user_name')
+            password = request.json.get('password')
+
+            user = User.query.filter(User.user_name == user_name).first()
+
+            if bcrypt.check_password_hash(user.password,password):
+                login_user(user)
+                return jsonify({"User name":str(user.user_name),'message': 'User logged in!'})
+            else:
+                return "Failed"
+
+
+    @app.route("/logout")
+    def logout():
+        logout_user()
+        return "Success"

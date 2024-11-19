@@ -12,13 +12,23 @@ def create_app():
     app = Flask(__name__,template_folder = 'templates')
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///./testdb.db"  # Fix the URI format here
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    app.secret_key = 'SOME KEY'
     
     db.init_app(app)
 
-    from routes import register_albums,register_users,register_lists
-    register_albums(app,db)
-    register_users(app,db)
-    register_lists(app,db)
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    from models import User
+    @login_manager.user_loader
+    def load_user(id):
+        return User.query.get(id)
+
+    bcrypt = Bcrypt(app)
+
+    from routes import register_routes
+    register_routes(app,db,bcrypt)
 
     migrate = Migrate(app,db)
 
