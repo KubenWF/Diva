@@ -9,33 +9,6 @@ def register_users(app,db,bcrypt):
         users = User.query.all()
         json_users = list(map(lambda x: x.to_json(),users))
         return jsonify({"users":json_users}),200
-        
-    @app.route("/create_user",methods=["POST"]) ## WORKS!!!!
-    def create_user():
-        password = request.json.get('first_name')
-        user_name = request.json.get('user_name')
-        email = request.json.get('email')
-        birth_day = int(request.json.get('birth_day'))
-        bio = request.json.get('bio')
-        birth_year = int(request.json.get('birth_year'))
-        birth_month = int(request.json.get('birth_day'))
-
-        if not first_name or not last_name or not email or not birth_day or not birth_year or not birth_month:
-            return jsonify({'message':'You missed one of the data points'}),400
-                
-        new_user = User(user_name=user_name,password=passworde,email=email,birth_day=birth_day,birth_month=birth_month,birth_year=birth_year,bio=bio)
-
-        json_user = new_user.to_json()
-        try:
-            db.session.add(new_user)
-            db.session.commit()
-        except Exception as e:
-            return (
-            jsonify({'message':str(e)}),
-            400
-            )
-
-        return jsonify({"message": "User added successfully","user": json_user}), 201
 
     @app.route('/delete_user/<id>', methods=['DELETE']) ## WORKS!!!!
     def delete_user(id):
@@ -59,46 +32,26 @@ def register_users(app,db,bcrypt):
 
         return jsonify({"message": "User found","user": json_user}), 201
 
-    @app.route('/update_user/<id>', methods=['PUT']) ## WORKS!!!!
-    def update_user(id):
-        user = User.query.get(id)
-
-        if not user:
-            return jsonify({"message":"User not found"}),404
-        
-        data = request.json
-        user.user_name = data.get("user_name",user.user_name)
-        user.password = data.get("password",user.password)
-        user.email = data.get("email",user.email)
-        user.bio = data.get("bio",user.bio)
-        user.birth_day = data.get("birth_day",user.birth_day)
-        user.birth_month = data.get("birth_month",user.birth_month)
-        user.birth_year = data.get("birth_year",user.birth_year)
-
-        db.session.commit()
-
-        return jsonify({"message": "User updated"}), 201
-
-    @app.route('/add_to_favorites/<user_id>/<album_id>', methods=['POST']) ## WORKS!!!!
-    def add_album_favorites(user_id,album_id):
-        from models import Album
+    # @app.route('/add_to_favorites/<user_id>/<album_id>', methods=['POST']) ## WORKS!!!!
+    # def add_album_favorites(user_id,album_id):
+    #     from models import Album
     
-        album = Album.query.get(album_id)
-        if not album:
-            return jsonify({'message': 'Album not found.'}), 404
+    #     album = Album.query.get(album_id)
+    #     if not album:
+    #         return jsonify({'message': 'Album not found.'}), 404
 
-        user = User.query.get(user_id)
-        if not user:
-            return jsonify({"message":"User not found"}),404
+    #     user = User.query.get(user_id)
+    #     if not user:
+    #         return jsonify({"message":"User not found"}),404
 
-        # Add album to user's favorite albums if not already added
-        if album not in user.user_albums:
-            user.user_albums.append(album)
-            db.session.commit() 
+    #     # Add album to user's favorite albums if not already added
+    #     if album not in user.user_albums:
+    #         user.user_albums.append(album)
+    #         db.session.commit() 
 
-            return jsonify({'message': 'Album added to your favorites!'}), 200
-        else:
-            return jsonify({'message': 'Album is already in your favorites.'}), 200
+    #         return jsonify({'message': 'Album added to your favorites!'}), 200
+    #     else:
+    #         return jsonify({'message': 'Album is already in your favorites.'}), 200
 
     @app.route("/albums_added/<int:user_id>", methods=["GET"]) ## WORKS!!!!
     def get_added_albums(user_id):
@@ -159,12 +112,74 @@ def register_users(app,db,bcrypt):
 
             if bcrypt.check_password_hash(user.password,password):
                 login_user(user)
-                return jsonify({"User name":str(user.user_name),'message': 'User logged in!'})
+                return (f"Logged in user: {current_user}")
+                # return jsonify({"User name":str(user.user_name),'message': 'User logged in!'})
             else:
                 return "Failed"
 
+    @app.route("/update_user", methods=["PUT"])
+    @login_required
+    def update_user():
+        user = current_user  # Access the logged-in user
+
+        # Extract fields to be updated from the request body
+        updated_user_name = request.json.get('user_name', user.user_name)
+        updated_email = request.json.get('email', user.email)
+        updated_password = request.json.get('password', user.password)
+        updated_bio = request.json.get('bio', user.bio)
+        updated_birth_day = request.json.get('birth_day', user.birth_day)
+        updated_birth_month = request.json.get('birth_month', user.birth_month)
+        updated_birth_year = request.json.get('birth_year', user.birth_year)
+
+        hashed_password = bcrypt.generate_password_hash(updated_password)
+
+        hashed_password = hashed_password.decode("utf-8")
+
+        # Update user fields
+        user.user_name = updated_user_name
+        user.email = updated_email
+        user.bio = updated_bio
+        user.birth_day = updated_birth_day
+        user.birth_month = updated_birth_month
+        user.birth_year = updated_birth_year
+        user.password = hashed_password
+
+        # Save changes to the database
+        db.session.commit()
+
+        return jsonify({'message': 'User information updated successfully!', 'user': user.to_json()}), 200
+
+    @app.route("/delete", methods=["DELETE"])
+    @login_required
+    def delete_account():
+        user = current_user
+        db.session.delete(user)
+        db.session.commit()
+
+        return jsonify({'message': 'User account deleted successfully!'}), 200
+
+    @app.route("/add_album_favourites", methods=['POST'])
+    @login_required
+    def add_album_favourites():
+        from models import Album
+        album_id = request.json.get('album_id')
+        album = Album.query.get(int(album_id))
+        if not album:
+            return jsonify({'message': 'Album not found.'}), 404
+
+        user = current_user
+
+        # Add album to user's favorite albums if not already added
+        if album not in user.user_albums:
+            user.user_albums.append(album)
+            db.session.commit() 
+
+            return jsonify({'message': 'Album added to your favorites!'}), 200
+        else:
+            return jsonify({'message': 'Album is already in your favorites.'}), 200
 
     @app.route("/logout")
+    @login_required
     def logout():
         logout_user()
         return "Success"
