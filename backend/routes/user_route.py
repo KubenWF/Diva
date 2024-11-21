@@ -1,123 +1,19 @@
-from flask import render_template,request,jsonify,redirect,url_for
+from flask import Blueprint,render_template,request,jsonify,redirect,url_for
 from models import User
 from flask_login import login_user,logout_user,current_user,login_required
 
-def register_users(app,db,bcrypt):
-
-    @app.route("/users",methods=["GET"]) ## WORKS!!!!
-    def get_users():
-        users = User.query.all()
-        json_users = list(map(lambda x: x.to_json(),users))
-        return jsonify({"users":json_users}),200
-
-    @app.route('/delete_user/<id>', methods=['DELETE']) ## WORKS!!!!
-    def delete_user(id):
-        user = User.query.get(id)
-
-        if not user:
-            return jsonify({"message":"User not found"}),404
-        
-        db.session.delete(user)
-        db.session.commit()
-        
-        return jsonify({"message":"User deleted"}),200
-
-    @app.route('/details_user/<id>',methods=["GET"]) ## WORKS!!!!
-    def details_user(id):
-        user = User.query.filter(User.id==id).first()
-        json_user = user.to_json()
-
-        if not user:
-            return jsonify({"message":"User not found"}),404
-
-        return jsonify({"message": "User found","user": json_user}), 201
-
-    # @app.route('/add_to_favorites/<user_id>/<album_id>', methods=['POST']) ## WORKS!!!!
-    # def add_album_favorites(user_id,album_id):
-    #     from models import Album
-    
-    #     album = Album.query.get(album_id)
-    #     if not album:
-    #         return jsonify({'message': 'Album not found.'}), 404
-
-    #     user = User.query.get(user_id)
-    #     if not user:
-    #         return jsonify({"message":"User not found"}),404
-
-    #     # Add album to user's favorite albums if not already added
-    #     if album not in user.user_albums:
-    #         user.user_albums.append(album)
-    #         db.session.commit() 
-
-    #         return jsonify({'message': 'Album added to your favorites!'}), 200
-    #     else:
-    #         return jsonify({'message': 'Album is already in your favorites.'}), 200
-
-    @app.route("/albums_added/<int:user_id>", methods=["GET"]) ## WORKS!!!!
-    def get_added_albums(user_id):
-
-        user = User.query.get(user_id)
-        if not user:
-            return jsonify({"message": "User not found"}), 404
-
-        albums = user.user_albums
-        if not albums:
-            return jsonify({"message": "No albums added by this user."}), 404
-
-        json_albums = [{"album_id": album.id,"album_name": album.name,"album_cover_art": album.cover_art,"album_ranking": album.ranking} for album in albums]
-
-        return jsonify({"albums": json_albums}), 200
-
-    @app.route("/index",methods=["GET","POST"])
+def register_user(app,db,bcrypt):
+    """Routes for authenticated users to manage their own resources (e.g., create/edit/delete personal lists, follow lists)."""
+    user_bp = Blueprint('user', __name__)
+ 
+    @user_bp.route("/index",methods=["GET","POST"]) ## WORKS!!!!
     def index():
         if current_user.is_authenticated:
             return jsonify({"User ID":str(current_user.id),'message': 'User logged in!'}), 200
         else:
             return "No user is logged in"    
 
-    @app.route("/signup",methods=["GET","POST"])
-    def signup():
-        if request.method == "GET":
-            return jsonify({'message': 'Sign up success!'}), 200
-        elif request.method == "POST":
-            user_name = request.json.get('user_name')
-            password = str(request.json.get('password'))
-            email = request.json.get('email')
-            birth_day = int(request.json.get('birth_day'))
-            birth_month = int(request.json.get('birth_month'))
-            birth_year = int(request.json.get('birth_year'))
-            bio = request.json.get('bio')
-
-            hashed_password = bcrypt.generate_password_hash(password)
-
-            hashed_password = hashed_password.decode("utf-8")
-
-            user = User(user_name = user_name,password = hashed_password,email=email,birth_day = birth_day,birth_month = birth_month,birth_year=birth_year,bio=bio)
-
-            db.session.add(user)
-            db.session.commit()
-
-            return redirect(url_for('index'))
-
-
-    @app.route("/login",methods=["GET","POST"])
-    def login():
-        if request.method == "GET":
-            return jsonify({'message': 'Login success!'}), 200
-        elif request.method == "POST":
-            user_name = request.json.get('user_name')
-            password = request.json.get('password')
-
-            user = User.query.filter(User.user_name == user_name).first()
-
-            if bcrypt.check_password_hash(user.password,password):
-                login_user(user)
-                return (f"Logged in user: {current_user}")
-                # return jsonify({"User name":str(user.user_name),'message': 'User logged in!'})
-            else:
-                return "Failed"
-
-    @app.route("/update_user", methods=["PUT"])
+    @user_bp.route("/update_user", methods=["PUT"]) ## WORKS!!!!
     @login_required
     def update_user():
         user = current_user  # Access the logged-in user
@@ -149,7 +45,7 @@ def register_users(app,db,bcrypt):
 
         return jsonify({'message': 'User information updated successfully!', 'user': user.to_json()}), 200
 
-    @app.route("/delete", methods=["DELETE"])
+    @user_bp.route("/delete_account", methods=["DELETE"]) ## WORKS!!!!
     @login_required
     def delete_account():
         user = current_user
@@ -158,9 +54,9 @@ def register_users(app,db,bcrypt):
 
         return jsonify({'message': 'User account deleted successfully!'}), 200
 
-    @app.route("/add_album_favourites", methods=['POST'])
+    @user_bp.route("/like_album", methods=['POST']) ## WORKS!!!!
     @login_required
-    def add_album_favourites():
+    def like_album():
         from models import Album
         album_id = request.json.get('album_id')
         album = Album.query.get(int(album_id))
@@ -174,12 +70,149 @@ def register_users(app,db,bcrypt):
             user.user_albums.append(album)
             db.session.commit() 
 
-            return jsonify({'message': 'Album added to your favorites!'}), 200
+            return jsonify({'message': 'Album added to your liked albums!'}), 200
         else:
-            return jsonify({'message': 'Album is already in your favorites.'}), 200
+            return jsonify({'message': 'Album is already in your liked albums.'}), 200
 
-    @app.route("/logout")
+    @user_bp.route("/create_list", methods=["POST"])
+    @login_required
+    def create_list():
+        from models import List
+        user = current_user
+
+        list_name = request.json.get("list_name")
+        list_description = request.json.get("list_description")
+        if not list_name:
+            return jsonify({"message": "List name is required"}), 400
+        
+        # Create the new list, passing the User object to the owners relationship
+        new_list = List(name=list_name, description=list_description)
+
+        try:
+            # Add the user to the list's owners relationship
+            new_list.owners.append(user)
+            
+            # Add the new list to the session
+            db.session.add(new_list)
+            db.session.commit()
+        except Exception as e:
+            return jsonify({"message": "An error occurred", "error": str(e)}), 400
+
+        return jsonify({
+            "message": "List created successfully",
+            "list": new_list.to_json()
+        }), 201
+
+    @user_bp.route("/delete_list", methods=["DELETE"]) ## WORKS!!!!
+    @login_required
+    def delete_list():
+        from models import List
+        list_id = request.json.get("list_id")
+        list = List.query.get(list_id)
+
+        if current_user not in list.owners:
+            return jsonify({'message': 'You do not have permission to delete this list'}), 403
+
+        db.session.delete(list)
+        db.session.commit()
+
+        return jsonify({'message': 'List deleted successfully!'}), 200
+
+    @user_bp.route("/add_album_list", methods=["POST"])
+    @login_required
+    def add_album_list():
+        from models import List, Album
+        data = request.get_json()
+        if not data:
+            return jsonify({"message": "Invalid JSON data"}), 400
+
+        album_id = data.get('album_id')
+        list_id = data.get("list_id")
+
+        if not album_id:
+            return jsonify({"message": "Album ID is required"}), 400
+        if not list_id:
+            return jsonify({"message": "List ID is required"}), 400
+
+        try:
+            album_id = int(album_id)  # Ensure that album_id is an integer
+            list_id = int(list_id)    # Ensure that list_id is an integer
+        except ValueError:
+            return jsonify({"message": "Invalid ID format. Album ID and List ID should be integers."}), 400 
+
+        album = Album.query.get(album_id)
+        if not album:
+            return jsonify({"message": "Album not found"}), 404
+
+        user_list = List.query.filter(List.id == list_id, List.owners.any(id=current_user.id)).first()
+        if not user_list:
+            return jsonify({"message": "List not found or not owned by the user"}), 404
+
+        try:
+            if album in user_list.listed_albums:
+                return jsonify({"message": "Album already exists in the list"}), 400
+
+            user_list.listed_albums.append(album)
+            db.session.commit()
+
+            return jsonify({
+                "message": "Album added to the list successfully",
+                "list": user_list.to_json()
+            }), 200
+        except Exception as e:
+            db.session.rollback()  # Ensure the session state is clean in case of an error
+            return jsonify({"message": "An error occurred", "error": str(e)}), 500
+
+    @user_bp.route("/delete_album_list", methods=["DELETE"])
+    @login_required
+    def delete_album_list():
+        from models import List, Album
+        data = request.get_json()
+        if not data:
+            return jsonify({"message": "Invalid JSON data"}), 400
+
+        album_id = data.get('album_id')
+        list_id = data.get("list_id")
+
+        if not album_id or not list_id:
+            return jsonify({"message": "Album ID and List ID are required"}), 400
+
+        try:
+            album_id = int(album_id)
+            list_id = int(list_id)
+        except ValueError:
+            return jsonify({"message": "Invalid ID format. Please provide valid integers for album_id and list_id."}), 400
+
+        album = Album.query.get(album_id)
+        if not album:
+            return jsonify({"message": "Album not found"}), 404
+
+        user_list = List.query.filter(List.id == list_id, List.owners.any(id=current_user.id)).first()
+        if not user_list:
+            return jsonify({"message": "List not found or not owned by the user"}), 404
+
+        try:
+            if album not in user_list.listed_albums:
+                return jsonify({"message": "Album not exists in the list"}), 400
+
+            user_list.listed_albums.remove(album)
+            db.session.commit()
+
+            return jsonify({
+                "message": "Album deleted from the list successfully",
+                "list": user_list.to_json()
+            }), 200
+        except Exception as e:
+            db.session.rollback()  # Ensure the session state is clean in case of an error
+            return jsonify({"message": "An error occurred", "error": str(e)}), 500
+
+    @user_bp.route("/logout") ## WORKS!!!!
     @login_required
     def logout():
-        logout_user()
-        return "Success"
+        try:
+            logout_user()
+            return jsonify({"message": "Logged out successfully."}), 200
+        except Exception as e:
+            return jsonify({"message": "Failed to log out.", "error": str(e)}), 500
+
+    app.register_blueprint(user_bp, url_prefix='/user')

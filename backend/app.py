@@ -4,9 +4,9 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 
+import os
 
 db = SQLAlchemy()
-
 
 def create_app():
     app = Flask(__name__,template_folder = 'templates')
@@ -31,5 +31,8 @@ def create_app():
     register_routes(app,db,bcrypt)
 
     migrate = Migrate(app,db)
+
+    # from import_data import import_csv_to_db
+    # import_csv_to_db(app,db)
 
     return app

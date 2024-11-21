@@ -1,6 +1,6 @@
 from app import db
 from flask_login import UserMixin
-from .association_tables import user_albums,owner_users_lists
+from .association_tables import user_albums,list_owners,list_followers
 from datetime import datetime
 
 class User(db.Model,UserMixin):
@@ -18,9 +18,9 @@ class User(db.Model,UserMixin):
                 
     user_albums = db.relationship('Album', secondary=user_albums, backref=db.backref('saved_albums', lazy='dynamic'))
 
-    owned_lists = db.relationship('List',secondary=owner_users_lists,backref=db.backref('ownerslists', lazy='dynamic'))
+    owned_lists = db.relationship('List',secondary=list_owners,backref=db.backref('ownerslists', lazy='dynamic'))
 
-    # followed_lists = db.relationship('List', secondary=list_followers, backref=db.backref('lists_followed', lazy='dynamic'))
+    followed_lists = db.relationship('List', secondary=list_followers, backref=db.backref('lists_followed', lazy='dynamic'))
 
     # reviews = db.relationship('Review', backref='reviewer', lazy=True)
 

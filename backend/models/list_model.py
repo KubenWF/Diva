@@ -1,6 +1,6 @@
 from app import db
 from flask_login import UserMixin
-from .association_tables import list_albums,owner_users_lists
+from .association_tables import list_albums, list_owners,list_followers
 from datetime import datetime,date
 
 class List(db.Model):
@@ -10,13 +10,11 @@ class List(db.Model):
     description = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.Date, default=date.today, nullable=False)
 
-    # # ForeignKey for owner relationship (user who created the list)
-    owners = db.relationship('User',secondary=owner_users_lists,backref=db.backref('listsowners', lazy='dynamic'))
+    owners = db.relationship('User',secondary= list_owners,backref=db.backref('listsowners', lazy='dynamic'))
 
     listed_albums = db.relationship('Album', secondary=list_albums, backref=db.backref('lists_associations', lazy='dynamic'))
 
-    # # Many-to-many relationship with followers of the list (followers in the list)
-    # followers = db.relationship('User', secondary=list_followers, backref=db.backref('lists_followed', lazy='dynamic'))
+    followers = db.relationship('User', secondary=list_followers, backref=db.backref('lists_followed', lazy='dynamic'))
 
     def to_json(self):
         return {

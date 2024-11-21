@@ -11,3 +11,36 @@ Git update
 git add .
 git commit -m "Your commit message here"
 git push
+
+
+
+JSON QUERIES for TESTING
+
+JSON FOR Signing up:
+{
+  "user_name": "wilfal",
+  "password": "adilet",
+  "email": "adiletkubenov@mail.com",
+  "birth_day": 25,
+  "birth_month": 3,
+  "birth_year": 2001,
+  "bio": "I am big fan of Aphex twin"
+}
+
+JSON FOR LOGIN: 
+{
+  "user_name": "wilfal",
+  "password": "adilet"
+}
+
+JSON FOR LIKING ALBUM:
+{
+  "album_id": 1
+}
+
+JSON FOR CREATING LIST:
+{
+  "list_name": "Bunga",
+  "list_description": "My favourite rap album"
+}
+
